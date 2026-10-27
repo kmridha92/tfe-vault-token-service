@@ -28,6 +28,6 @@ jobs:
           role: ${{ inputs.team }}
           jwtGithubAudience: vault
           secrets: |
-            terraform/creds/${{ inputs.team }} token | TF_TOKEN_app_terraform_io
+            terraform-${{ inputs.team }}/creds/${{ inputs.team }} token | TF_TOKEN_app_terraform_io
       - name: Verify token present
         run: test -n "$TF_TOKEN_app_terraform_io" && echo "token received"

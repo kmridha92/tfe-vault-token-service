@@ -15,7 +15,7 @@ init:
 plan: init
 	terraform -chdir=terraform plan
 
-# Requires TF_VAR_tfe_admin_token and TF_VAR_tfe_organization in the environment
+# Requires TF_VAR_tfe_admin_token and TF_VAR_tfe_user_id in the environment
 apply: init
 	terraform -chdir=terraform apply
 

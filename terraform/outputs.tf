@@ -1,8 +1,8 @@
 output "token_read_paths" {
-  description = "Vault path per team that returns a short-lived TFE team token."
+  description = "Vault path per team that returns a short-lived TFE user token."
   value = {
     for k, r in vault_terraform_cloud_secret_role.team :
-    k => "${vault_terraform_cloud_secret_backend.tfe.backend}/creds/${r.name}"
+    k => "${vault_terraform_cloud_secret_backend.team[k].backend}/creds/${r.name}"
   }
 }
 

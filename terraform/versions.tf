@@ -6,16 +6,7 @@ terraform {
       source  = "hashicorp/vault"
       version = "~> 4.0"
     }
-    tfe = {
-      source  = "hashicorp/tfe"
-      version = "~> 0.60"
-    }
   }
-}
-
-provider "tfe" {
-  hostname = trimprefix(var.tfe_address, "https://")
-  token    = var.tfe_admin_token
 }
 
 provider "vault" {

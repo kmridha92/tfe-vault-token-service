@@ -1,29 +1,23 @@
-# --- HCP Terraform teams (one per entry in var.teams) -----------------------
+# --- TFE secrets engine: one mount + role per team --------------------------
+# Vault can only mint a user token for the owner of the mount's token, so each
+# team gets its own mount configured with that team's user token.
 
-resource "tfe_team" "this" {
-  for_each     = var.teams
-  organization = var.tfe_organization
-  name         = each.key
-}
-
-# --- TFE secrets engine -----------------------------------------------------
-
-resource "vault_terraform_cloud_secret_backend" "tfe" {
-  backend     = "terraform"
+resource "vault_terraform_cloud_secret_backend" "team" {
+  for_each    = var.teams
+  backend     = "terraform-${each.key}"
   address     = var.tfe_address
-  token       = var.tfe_admin_token
-  description = "Mints short-lived Terraform tokens"
+  token       = lookup(var.team_tokens, each.key, var.tfe_admin_token)
+  description = "Mints short-lived Terraform tokens for ${each.key}"
 
   default_lease_ttl_seconds = var.token_ttl
   max_lease_ttl_seconds     = var.token_max_ttl
 }
 
-# One role per team, mapped 1:1 by name
 resource "vault_terraform_cloud_secret_role" "team" {
   for_each = var.teams
-  backend  = vault_terraform_cloud_secret_backend.tfe.backend
+  backend  = vault_terraform_cloud_secret_backend.team[each.key].backend
   name     = each.key
-  team_id  = tfe_team.this[each.key].id
+  user_id  = lookup(var.team_user_ids, each.key, var.tfe_user_id)
   ttl      = var.token_ttl
   max_ttl  = var.token_max_ttl
 }
@@ -35,7 +29,7 @@ resource "vault_policy" "team" {
   name     = "tfe-token-${each.key}"
 
   policy = <<-EOT
-    path "${vault_terraform_cloud_secret_backend.tfe.backend}/creds/${vault_terraform_cloud_secret_role.team[each.key].name}" {
+    path "${vault_terraform_cloud_secret_backend.team[each.key].backend}/creds/${vault_terraform_cloud_secret_role.team[each.key].name}" {
       capabilities = ["read"]
     }
   EOT
@@ -76,7 +70,7 @@ resource "vault_jwt_auth_backend_role" "team" {
   user_claim      = "repository"
   bound_audiences = ["vault"]
   bound_claims = {
-    repository  = coalesce(each.value.github_repository, var.github_repository)
+    repository  = lookup(var.team_github_repositories, each.key, var.github_repository)
     environment = each.key
   }
   token_policies = [vault_policy.team[each.key].name]

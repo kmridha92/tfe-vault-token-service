@@ -9,18 +9,21 @@ GitHub Actions (OIDC, environment=<team>) ─┐
                                            ├─> Vault auth role <team> ─> policy tfe-token-<team>
 AppRole <team> (local/machines) ───────────┘            │
                                                         ▼
-                         terraform/creds/<team> ──> HCP Terraform team token (TTL 15m, max 1h)
+                    terraform-<team>/creds/<team> ──> HCP Terraform user token (TTL 15m, max 1h)
 ```
 
-Each entry in `var.teams` (default `team1`, `team2`, `team3`) maps one to one:
+Teams are simulated so the project works on the HCP Terraform free tier (real teams need a paid plan). Each entry in `var.teams` (default `team1`, `team2`, `team3`) maps one to one:
 
-| HCP Terraform | Vault |
+| Vault object | Name |
 |---|---|
-| Team `<team>` (created by the `tfe` provider) | TFE secrets engine role `<team>` (`team_id`) |
-| | Policy `tfe-token-<team>`: read on `terraform/creds/<team>` only |
-| | AppRole `<team>` and JWT role `<team>` (bound to the repo and GitHub environment `<team>`) |
+| TFE secrets engine mount | `terraform-<team>` |
+| Role | `<team>` (`user_id`) |
+| Policy | `tfe-token-<team>`: read on `terraform-<team>/creds/<team>` only |
+| AppRole and JWT role | `<team>` (JWT bound to the repo and GitHub environment `<team>`) |
 
-Teams are isolated: a team's identity can only mint its own team token. Team tokens need a paid HCP Terraform plan (or trial).
+Vault can only mint a user token for the owner of a mount's token, hence one mount per team. By default all teams use your token and user ID. For real isolation, give each team its own HCP Terraform account via `team_tokens` and `team_user_ids`.
+
+A team's identity can only read its own path; reading another team's path is denied.
 
 ## Quickstart
 
@@ -28,14 +31,14 @@ Prereqs: Docker, Vault CLI, Terraform.
 
 ```sh
 make up                                    # Vault 2.2 in dev mode on :8200
-export TF_VAR_tfe_admin_token=...          # org owner token (never commit)
-export TF_VAR_tfe_organization=my-org
-make apply                                 # creates teams + Vault config
+export TF_VAR_tfe_admin_token=...          # HCP Terraform user token (never commit)
+export TF_VAR_tfe_user_id=user-...
+make apply
 make demo-approle TEAM=team1               # AppRole login -> mint team1 token
 make down
 ```
 
-Add a team by adding a key to `teams` and applying.
+Add a team by adding it to `teams` and applying.
 
 `make validate` runs fmt and validate without needing credentials.
 
