@@ -26,7 +26,7 @@ A team's identity can only read its own path; reading another team's path is den
 
 ## Quickstart
 
-Full guide: [docs/SETUP.md](docs/SETUP.md). One-shot: `scripts/setup.sh ~/.secrets/tfe.env`.
+Full guide: [docs/SETUP.md](docs/SETUP.md). One-shot: `scripts/setup.sh ~/.secrets/secrets.env`.
 
 Prereqs: Docker, Vault CLI, Terraform.
 

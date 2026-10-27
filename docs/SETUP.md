@@ -9,7 +9,7 @@ Sets up a local Vault (Docker), the Terraform Cloud/Enterprise secrets engine, a
 
 ## 1. Provide credentials
 
-Keep them outside the repo, for example in `~/.secrets/tfe.env` (`chmod 600`):
+Keep them outside the repo, for example in `~/.secrets/secrets.env` (`chmod 600`):
 
 ```sh
 export TF_VAR_tfe_admin_token="..."
@@ -19,7 +19,7 @@ export TF_VAR_tfe_user_id="user-..."
 ## 2. Run setup
 
 ```sh
-scripts/setup.sh ~/.secrets/tfe.env
+scripts/setup.sh ~/.secrets/secrets.env
 ```
 
 This starts Vault 2.2 (dev mode, root token `root`), waits until it is healthy, then runs `terraform init` and `apply`.
@@ -27,7 +27,7 @@ This starts Vault 2.2 (dev mode, root token `root`), waits until it is healthy, 
 Manual equivalent:
 
 ```sh
-source ~/.secrets/tfe.env
+source ~/.secrets/secrets.env
 make up
 make apply
 ```
@@ -104,7 +104,7 @@ vault write auth/approle/role/team1/secret-id-accessor/destroy secret_id_accesso
 **Rotate the admin token Vault uses to mint tokens** (`tfe_admin_token`):
 
 1. Create a new token in HCP Terraform (Account Settings → Tokens).
-2. Update `TF_VAR_tfe_admin_token` in `~/.secrets/tfe.env`, then `source` it.
+2. Update `TF_VAR_tfe_admin_token` in `~/.secrets/secrets.env`, then `source` it.
 3. Run `make apply` (Terraform updates `terraform/config`).
 4. Delete the old token in HCP Terraform.
 
