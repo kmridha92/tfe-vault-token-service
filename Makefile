@@ -15,7 +15,7 @@ init:
 plan: init
 	terraform -chdir=terraform plan
 
-# Requires TF_VAR_tfe_admin_token and TF_VAR_tfe_user_id in the environment
+# Requires TF_VAR_tfe_admin_token and TF_VAR_tfe_organization in the environment
 apply: init
 	terraform -chdir=terraform apply
 
@@ -26,5 +26,6 @@ validate: init
 	terraform -chdir=terraform fmt -check -recursive
 	terraform -chdir=terraform validate
 
+# Usage: make demo-approle TEAM=team1
 demo-approle:
-	./scripts/demo-approle.sh
+	./scripts/demo-approle.sh $(TEAM)

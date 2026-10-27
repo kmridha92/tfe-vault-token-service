@@ -1,9 +1,12 @@
-output "token_read_path" {
-  description = "Vault path that returns a short-lived TFE token."
-  value       = "${vault_terraform_cloud_secret_backend.tfe.backend}/creds/${vault_terraform_cloud_secret_role.ci.name}"
+output "token_read_paths" {
+  description = "Vault path per team that returns a short-lived TFE team token."
+  value = {
+    for k, r in vault_terraform_cloud_secret_role.team :
+    k => "${vault_terraform_cloud_secret_backend.tfe.backend}/creds/${r.name}"
+  }
 }
 
-output "approle_role_id" {
-  description = "AppRole role ID for the ci role."
-  value       = vault_approle_auth_backend_role.ci.role_id
+output "approle_role_ids" {
+  description = "AppRole role ID per team."
+  value       = { for k, r in vault_approle_auth_backend_role.team : k => r.role_id }
 }

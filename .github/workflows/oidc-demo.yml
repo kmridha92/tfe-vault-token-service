@@ -4,6 +4,11 @@ name: oidc-demo
 # Requires a Vault reachable from GitHub runners and the repo variable VAULT_ADDR.
 on:
   workflow_dispatch:
+    inputs:
+      team:
+        description: Team (must match a GitHub environment and Vault role)
+        required: true
+        default: team1
 
 permissions:
   id-token: write
@@ -12,6 +17,7 @@ permissions:
 jobs:
   mint-token:
     runs-on: ubuntu-latest
+    environment: ${{ inputs.team }}
     steps:
       - name: Get short-lived TFE token from Vault
         uses: hashicorp/vault-action@v3
@@ -19,9 +25,9 @@ jobs:
           url: ${{ vars.VAULT_ADDR }}
           method: jwt
           path: jwt-github
-          role: github-ci
+          role: ${{ inputs.team }}
           jwtGithubAudience: vault
           secrets: |
-            terraform/creds/ci token | TF_TOKEN_app_terraform_io
+            terraform/creds/${{ inputs.team }} token | TF_TOKEN_app_terraform_io
       - name: Verify token present
         run: test -n "$TF_TOKEN_app_terraform_io" && echo "token received"

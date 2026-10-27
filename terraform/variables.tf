@@ -16,9 +16,21 @@ variable "tfe_admin_token" {
   sensitive   = true
 }
 
-variable "tfe_user_id" {
-  description = "HCP Terraform user ID (user-xxxx) that minted tokens belong to. User tokens work on the free tier; team tokens need a paid plan."
+variable "tfe_organization" {
+  description = "HCP Terraform organization in which the teams are created."
   type        = string
+}
+
+variable "teams" {
+  description = "Teams to create in HCP Terraform. Each gets a one-to-one Vault role, policy, AppRole and GitHub OIDC role. github_repository defaults to var.github_repository."
+  type = map(object({
+    github_repository = optional(string)
+  }))
+  default = {
+    team1 = {}
+    team2 = {}
+    team3 = {}
+  }
 }
 
 variable "token_ttl" {
