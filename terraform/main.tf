@@ -1,13 +1,10 @@
-# --- TFE secrets engine: one mount + role per team --------------------------
-# Vault can only mint a user token for the owner of the mount's token, so each
-# team gets its own mount configured with that team's user token.
+# --- TFE secrets engine: one mount, one role per team -----------------------
 
-resource "vault_terraform_cloud_secret_backend" "team" {
-  for_each    = var.teams
-  backend     = "terraform-${each.key}"
+resource "vault_terraform_cloud_secret_backend" "tfe" {
+  backend     = "terraform"
   address     = var.tfe_address
-  token       = lookup(var.team_tokens, each.key, var.tfe_admin_token)
-  description = "Mints short-lived Terraform tokens for ${each.key}"
+  token       = var.tfe_admin_token
+  description = "Mints short-lived Terraform tokens"
 
   default_lease_ttl_seconds = var.token_ttl
   max_lease_ttl_seconds     = var.token_max_ttl
@@ -15,9 +12,10 @@ resource "vault_terraform_cloud_secret_backend" "team" {
 
 resource "vault_terraform_cloud_secret_role" "team" {
   for_each = var.teams
-  backend  = vault_terraform_cloud_secret_backend.team[each.key].backend
+  backend  = vault_terraform_cloud_secret_backend.tfe.backend
   name     = each.key
-  user_id  = lookup(var.team_user_ids, each.key, var.tfe_user_id)
+  team_id  = lookup(var.team_ids, each.key, null)
+  user_id  = contains(keys(var.team_ids), each.key) ? null : var.tfe_user_id
   ttl      = var.token_ttl
   max_ttl  = var.token_max_ttl
 }
@@ -29,7 +27,7 @@ resource "vault_policy" "team" {
   name     = "tfe-token-${each.key}"
 
   policy = <<-EOT
-    path "${vault_terraform_cloud_secret_backend.team[each.key].backend}/creds/${vault_terraform_cloud_secret_role.team[each.key].name}" {
+    path "${vault_terraform_cloud_secret_backend.tfe.backend}/creds/${vault_terraform_cloud_secret_role.team[each.key].name}" {
       capabilities = ["read"]
     }
   EOT

@@ -17,25 +17,18 @@ variable "tfe_admin_token" {
 }
 
 variable "tfe_user_id" {
-  description = "HCP Terraform user ID (user-xxxx) owning tfe_admin_token. Default for every team."
+  description = "HCP Terraform user ID (user-xxxx) owning tfe_admin_token. Used by roles of teams without a team_ids entry."
   type        = string
 }
 
 variable "teams" {
-  description = "Simulated teams (free tier). Each gets a one-to-one Vault mount, role, policy, AppRole and GitHub OIDC role."
+  description = "Teams. Each gets a one-to-one Vault role, policy, AppRole and GitHub OIDC role."
   type        = set(string)
   default     = ["team1", "team2", "team3"]
 }
 
-variable "team_tokens" {
-  description = "Per-team HCP Terraform user token, keyed by team. Falls back to tfe_admin_token. Use separate accounts for real isolation."
-  type        = map(string)
-  sensitive   = true
-  default     = {}
-}
-
-variable "team_user_ids" {
-  description = "Per-team HCP Terraform user ID, keyed by team. Falls back to tfe_user_id."
+variable "team_ids" {
+  description = "Optional HCP Terraform team IDs (team-xxxx), keyed by team name. Teams listed here get team-token roles (paid plan); others get user-token roles for tfe_user_id."
   type        = map(string)
   default     = {}
 }

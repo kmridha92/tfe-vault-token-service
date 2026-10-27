@@ -9,19 +9,18 @@ GitHub Actions (OIDC, environment=<team>) ─┐
                                            ├─> Vault auth role <team> ─> policy tfe-token-<team>
 AppRole <team> (local/machines) ───────────┘            │
                                                         ▼
-                    terraform-<team>/creds/<team> ──> HCP Terraform user token (TTL 15m, max 1h)
+                    terraform/creds/<team> ──> HCP Terraform token (TTL 15m, max 1h)
 ```
 
-Teams are simulated so the project works on the HCP Terraform free tier (real teams need a paid plan). Each entry in `var.teams` (default `team1`, `team2`, `team3`) maps one to one:
+One `terraform` secrets engine with one role per entry in `var.teams` (default `team1`, `team2`, `team3`), mapped one to one:
 
 | Vault object | Name |
 |---|---|
-| TFE secrets engine mount | `terraform-<team>` |
-| Role | `<team>` (`user_id`) |
-| Policy | `tfe-token-<team>`: read on `terraform-<team>/creds/<team>` only |
+| Role on the `terraform` engine | `<team>` |
+| Policy | `tfe-token-<team>`: read on `terraform/creds/<team>` only |
 | AppRole and JWT role | `<team>` (JWT bound to the repo and GitHub environment `<team>`) |
 
-Vault can only mint a user token for the owner of a mount's token, hence one mount per team. By default all teams use your token and user ID. For real isolation, give each team its own HCP Terraform account via `team_tokens` and `team_user_ids`.
+On the free tier, roles use `user_id`, so all teams mint tokens for your single account (they differ in Vault identity, policy and lease, not in HCP Terraform identity). On a paid plan, set `team_ids = { team1 = "team-xxxx" }` to switch a team's role to real HCP Terraform team tokens.
 
 A team's identity can only read its own path; reading another team's path is denied.
 
