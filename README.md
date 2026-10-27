@@ -43,4 +43,4 @@ make down
 - The GitHub JWT login can only be fully exercised from a real Actions run.
 
 ## Status
-Config validated; end-to-end test against HCP Terraform pending credentials.
+Applied to local Vault and verified end to end: AppRole login mints a 15-minute HCP Terraform user token. GitHub OIDC login is untested until run from Actions against a reachable Vault.
