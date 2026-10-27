@@ -1,0 +1,27 @@
+name: oidc-demo
+
+# Demonstrates GitHub Actions authenticating to Vault via JWT/OIDC.
+# Requires a Vault reachable from GitHub runners and the repo variable VAULT_ADDR.
+on:
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  mint-token:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get short-lived TFE token from Vault
+        uses: hashicorp/vault-action@v3
+        with:
+          url: ${{ vars.VAULT_ADDR }}
+          method: jwt
+          path: jwt-github
+          role: github-ci
+          jwtGithubAudience: vault
+          secrets: |
+            terraform/creds/ci token | TF_TOKEN_app_terraform_io
+      - name: Verify token present
+        run: test -n "$TF_TOKEN_app_terraform_io" && echo "token received"
